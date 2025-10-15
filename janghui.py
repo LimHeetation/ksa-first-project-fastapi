@@ -240,7 +240,7 @@ async def read_items(
     return results
 
 #Query Parameter Models
-
+#파이댄틱모델을 패스트에이피아이에서 쿼리 파라미터를 선언하는데 사용할 수 있다.
 from typing import Annotated, Literal
 
 from fastapi import FastAPI, Query
@@ -250,12 +250,42 @@ app = FastAPI()
 
 
 class FilterParams(BaseModel):
+    model_config = {"extra": "forbid"}
+
     limit: int = Field(100, gt=0, le=100)
     offset: int = Field(0, ge=0)
     order_by: Literal["created_at", "updated_at"] = "created_at"
     tags: list[str] = []
-    
+
+
 @app.get("/items/")
-async def read_items(filter_query : Annotated[FilterParams,Query()]):
+async def read_items(filter_query: Annotated[FilterParams, Query()]):
     return filter_query
 
+#Body - Multiple Parameters
+#fastapi에서 여러 바디 파라미터를 가질 수 있음, 여러개면 키로 감싸고 하나여도 키로 감쌀 수 있음
+from typing import Annotated
+
+from fastapi import FastAPI, Path, Body
+from pydantic import BaseModel
+
+app = FastAPI()
+
+
+class Item(BaseModel):
+    name: str
+    description: str | None = None
+    price: float
+    tax: float | None = None
+
+class User(BaseModel):
+    username: str
+    full_name: str | None = None
+    
+
+@app.put("/items/{item_id}")
+async def update_item(
+    item_id: int, item: Annotated[Item,Body(embed=True)], user: User, importance: Annotated[int, Body()]
+    ):
+    results = {"item_id": item_id, "item": item, "user": user}
+    return results
