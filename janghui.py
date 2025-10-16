@@ -289,3 +289,76 @@ async def update_item(
     ):
     results = {"item_id": item_id, "item": item, "user": user}
     return results
+
+#Body- Fields
+#Fields는 extra validations와 metadata를 선언할 수 있다.
+from typing import Annotated
+
+from fastapi import FastAPI, Body
+from pydantic import BaseModel, Field
+
+app = FastAPI()
+
+class Item(BaseModel):
+    name: str
+    description: str | None = Field(
+        default=None, title="The description of the item", max_length=300
+    )
+    price: float = Field(gt=0, description="The price must be greater than zero")
+    tax: float | None = None
+    
+@app.put("/items/{item_id}")
+async def update_item(item_id: int, item: Annotated[Item, Body(embed=True)]):
+    results = {"item_id": item_id, "item": item}
+    return results
+
+#Body - Nested Models
+#중첩모델 모델안에 모델을 넣을 수 있음
+from fastapi import FastAPI
+from pydantic import BaseModel, HttpUrl
+
+app = FastAPI()
+
+class Image(BaseModel):
+    url: HttpUrl
+    name: str
+    
+class Item(BaseModel):
+    name: str
+    description: str | None = None
+    price: float
+    tax: float | None = None
+    tags: set[str] = set() # set[str]=set() 반복하기 싫을 때 셋으로 선언가능
+    image: list[Image] | None = None
+ 
+class Offer(BaseModel):
+    name: str
+    description: str | None = None
+    price: float
+    items: list[Item]
+    
+@app.put("/items/{item_id}")
+async def update_item(item_id: int, item: Item):
+    results = {"item_id": item_id, "item": item}
+    return results
+
+@app.post("/offers/")
+async def create_offer(offer: Offer):
+    return offer
+##
+from fastapi import FastAPI
+from pydantic import BaseModel, HttpUrl
+
+app = FastAPI()
+
+
+class Image(BaseModel):
+    url: HttpUrl
+    name: str
+
+
+@app.post("/images/multiple/")
+async def create_multiple_images(images: list[Image]):
+    for image in images:
+        image.url
+    return images
