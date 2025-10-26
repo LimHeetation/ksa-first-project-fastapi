@@ -6,4 +6,3 @@ class a (Enum):
     cc=3
 
 print(a.aa.name)
-    
